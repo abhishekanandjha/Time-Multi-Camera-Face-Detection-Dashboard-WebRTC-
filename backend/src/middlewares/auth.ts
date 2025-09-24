@@ -3,7 +3,7 @@ import { Context } from 'hono';
 import { verifyJwt } from '../utils/jwt';
 
 export async function authMiddleware(ctx: Context, next: any) {
-  const header = ctx.req.headers.get('authorization') || '';
+  const header = ctx.req.header('authorization') || '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : null;
   if (!token) return ctx.text('Unauthorized', 401);
   try {

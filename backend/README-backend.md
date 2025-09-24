@@ -44,3 +44,48 @@ Created admin user: admin password: password123
    npm run seed
 2. Start in dev:
    npm run dev
+
+
+   <!-- regarding calling api for the backend  -->
+   <!-- Login to get JWT -->
+   curl -X POST http://localhost:4000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"password123"}'
+
+<!-- Create a camera -->
+  curl -X POST http://localhost:4000/api/cameras \
+  -H "Authorization: Bearer JWT_TOKEN_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Entrance","rtspUrl":"rtsp://example.com/live","location":"Gate"}'
+
+<!-- Get all cameras -->
+  curl -X GET http://localhost:4000/api/cameras \
+  -H "Authorization: Bearer JWT_TOKEN_HERE"
+
+
+<!-- Update camera -->
+  curl -X PUT http://localhost:4000/api/cameras/1 \
+  -H "Authorization: Bearer JWT_TOKEN_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{"enabled":false}'
+
+  <!--  Delete camera -->
+  curl -X DELETE http://localhost:4000/api/cameras/1 \
+  -H "Authorization: Bearer JWT_TOKEN_HERE"
+
+  <!-- Post an aler -->
+  curl -X POST http://localhost:4000/api/alerts \
+  -H "Authorization: Bearer JWT_TOKEN_HERE" \
+  -H "Content-Type: application/json" \
+  -d '{"cameraId":1,"snapshotUrl":"http://example.com/face1.png","metadata":{"faces":2}}'
+
+  <!-- Fetch alerts -->
+
+  curl -X GET "http://localhost:4000/api/alerts?cameraId=1&page=1&limit=5" \
+  -H "Authorization: Bearer JWT_TOKEN_HERE"
+
+  <!-- trigger an alert via wss -->
+  curl -X POST http://localhost:4000/api/alerts \
+  -H "Authorization: Bearer JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"cameraId":1,"snapshotUrl":"http://example.com/test.png","metadata":{"faces":1}}'

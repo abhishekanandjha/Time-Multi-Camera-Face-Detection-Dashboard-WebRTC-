@@ -3,6 +3,7 @@ import app from './server';
 import { PORT } from './config/env';
 import { prisma } from './db/prisma';
 import { serve } from '@hono/node-server';
+import { initWebSocket } from './ws/alerts';
 
 const start = async () => {
   try {
@@ -13,8 +14,11 @@ const start = async () => {
     process.exit(1);
   }
 
-  serve({ fetch: app.fetch, port: PORT });
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  // serve({ fetch: app.fetch, port: PORT });
+  // initWebSocket(server)
+  const server = serve({ fetch: app.fetch, port: PORT })
+  initWebSocket(server)
+  console.log(`Server running on http://localhost:${PORT}`);
 };
 
 start();

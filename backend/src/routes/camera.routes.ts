@@ -1,11 +1,14 @@
 import { Hono } from 'hono'
 import { authMiddleware } from '../middlewares/auth'
 import { prisma } from '../db/prisma'
+import axios from 'axios'
+
 
 const camera = new Hono()
 
 // Apply auth to all routes
 camera.use('*', authMiddleware)
+const WORKER_URL = process.env.WORKER_URL || 'http://localhost:8080'
 
 // Create camera
 camera.post('/', async (c) => {
@@ -66,6 +69,56 @@ camera.delete('/:id', async (c) => {
 
   if (deleted.count === 0) return c.json({ message: 'Camera not found' }, 404)
   return c.json({ message: 'Camera deleted successfully' })
+})
+
+
+// Start camera
+camera.post('/:id/start', async (c) => {
+  const { id } = c.req.param()
+  const user = (c as any).user
+
+  // find camera
+  const cam = await prisma.camera.findFirst({ where: { id: Number(id), userId: user.id } })
+  if (!cam) return c.json({ message: 'Camera not found' }, 404)
+
+  // mark enabled
+  await prisma.camera.update({
+    where: { id: cam.id },
+    data: { enabled: true },
+  })
+
+  // notify worker service
+  try {
+    // await axios.post(`http://worker:8080/start`, { cameraId: cam.id, rtspUrl: cam.rtspUrl })
+    await axios.post(`${WORKER_URL}/start`, { cameraId: cam.id, rtspUrl: cam.rtspUrl })
+  } catch (err) {
+    console.error('Failed to notify worker:', err)
+  }
+
+  return c.json({ message: `Camera ${id} started` })
+})
+
+// Stop camera
+camera.post('/:id/stop', async (c) => {
+  const { id } = c.req.param()
+  const user = (c as any).user
+
+  const cam = await prisma.camera.findFirst({ where: { id: Number(id), userId: user.id } })
+  if (!cam) return c.json({ message: 'Camera not found' }, 404)
+
+  await prisma.camera.update({
+    where: { id: cam.id },
+    data: { enabled: false },
+  })
+
+  try {
+    // await axios.post(`http://worker:8080/stop`, { cameraId: cam.id })
+    await axios.post(`${WORKER_URL}/stop`, { cameraId: cam.id })
+  } catch (err) {
+    console.error('Failed to notify worker:', err)
+  }
+
+  return c.json({ message: `Camera ${id} stopped` })
 })
 
 export default camera
