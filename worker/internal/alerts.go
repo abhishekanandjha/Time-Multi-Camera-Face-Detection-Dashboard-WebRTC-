@@ -2,6 +2,7 @@ package internal
 
 import (
 	"log"
+
 	"github.com/go-resty/resty/v2"
 )
 
@@ -15,7 +16,7 @@ func sendAlert(cameraId int, snapshotUrl string, metadata map[string]interface{}
 			"snapshotUrl": snapshotUrl,
 			"metadata":    metadata,
 		}).
-		Post("http://backend:4000/api/alerts") // backend service in docker-compose
+		Post("http://localhost:4000/api/alerts")
 
 	if err != nil {
 		log.Printf("Failed to send alert: %v\n", err)

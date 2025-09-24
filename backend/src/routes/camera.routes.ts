@@ -90,7 +90,8 @@ camera.post('/:id/start', async (c) => {
   // notify worker service
   try {
     // await axios.post(`http://worker:8080/start`, { cameraId: cam.id, rtspUrl: cam.rtspUrl })
-    await axios.post(`${WORKER_URL}/start`, { cameraId: cam.id, rtspUrl: cam.rtspUrl })
+    let resp = await axios.post(`${WORKER_URL}/start`, { cameraId: cam.id, rtspUrl: cam.rtspUrl })
+    console.log('Worker response:', resp)
   } catch (err) {
     console.error('Failed to notify worker:', err)
   }

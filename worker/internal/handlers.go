@@ -2,8 +2,13 @@ package internal
 
 import (
 	"net/http"
+	"sync"
+
 	"github.com/gin-gonic/gin"
 )
+
+var activeStreams = make(map[int]bool)
+var mu sync.Mutex
 
 type StartRequest struct {
 	CameraId int    `json:"cameraId"`
@@ -21,7 +26,16 @@ func startHandler(c *gin.Context) {
 		return
 	}
 
-	go simulateCameraStream(req.CameraId, req.RtspUrl)
+	mu.Lock()
+	if activeStreams[req.CameraId] {
+		mu.Unlock()
+		c.JSON(http.StatusConflict, gin.H{"message": "already running"})
+		return
+	}
+	activeStreams[req.CameraId] = true
+	mu.Unlock()
+
+	go processCamera(req.CameraId, req.RtspUrl)
 
 	c.JSON(http.StatusOK, gin.H{"message": "camera started"})
 }
@@ -33,6 +47,9 @@ func stopHandler(c *gin.Context) {
 		return
 	}
 
-	// TODO: track running streams, stop them properly
+	mu.Lock()
+	delete(activeStreams, req.CameraId)
+	mu.Unlock()
+
 	c.JSON(http.StatusOK, gin.H{"message": "camera stopped"})
 }
